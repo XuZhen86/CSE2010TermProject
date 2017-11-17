@@ -1,14 +1,37 @@
+/*
+    Authors (group members): Zhen Xu, Tariq Maashani, Jim Harrell
+    Email addresses of group members:
+Group name:
+    Course: CSE 2010
+    Section: 02
+
+    Description of the overall algorithm and key data structures:
+        Algorithm: DFS
+        Data structure: DictionaryTree
+        Other techniques: Multithreading, Bit-Wise Operation, Process-Oriented Programming
+Description:
+      
+
+    Average Performance on code01.fit.edu:
+        Points: 236.5
+        Time in seconds: 0.00911
+        Used memory in bytes: 32806801
+        Overall Performance: 126.55
+*/
+
 import java.util.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+// copied and organized from Location.java
 class Location{
-    public int row, col;  // row and column index on the board
+    public int row, col;
     public Location(int aRow, int aCol){row = aRow;col = aCol;}
     public Location(){row = 0;col = 0;}
     public String toString(){return String.format("[%d,%d]",row,col);}
 }
 
+// copied, organized, and extended from Word.java
 class Word{
     private String word;
     private ArrayList<Location> path;
@@ -84,12 +107,10 @@ class Word{
             return null;
         }
     }
+
+    // the folowing 2 functions are added.
     public boolean equals(Word w){return this.word.equals(w.getWord());}
-    public String toString(){return String.format("[%s,%s]",word,path);}
-    public int compareTo(Word w){
-        if(getPathLength()!=w.getPathLength()){return w.getPathLength()-getPathLength();}
-        else{return w.getWord().compareTo(getWord());}
-    }
+    public String toString(){return String.format("[%s,%s]",word,path);}// for debugging
 }
 
 class Seeker extends Thread{
@@ -104,7 +125,7 @@ class Seeker extends Thread{
     public int startX,startY;
 
     public boolean[][] visited;
-    public byte[] traceByte,stringByte;
+    public byte[] traceByte,stringByte;// the traceByte is the original byte[] to store the trace of the dfs, the stringByte is for the special case of QU
     public int[][] traceXY;
     public ArrayList<Word> answers;
 
@@ -164,6 +185,8 @@ class Seeker extends Thread{
         visited[x][y]=false;
     }
 
+    // it finds if there is a child in dictionary tree for the next char on the board
+    // it also check if the xy is valid and never been visited
     public int findIndex(int p,int x,int y){
         if(d[p]!=null&&0<=x&&x<4&&0<=y&&y<4&&!visited[x][y]){
             for(int i=0;i<d[p].length;i++){
@@ -176,48 +199,40 @@ class Seeker extends Thread{
         return -1;
     }
 
+    // the folowing three functions are used to extract fields from entry of d[][]. all using bitwise operation
     public boolean dGetBoolean(int data){
-        return data<0;
+        return data<0;// it's actually testing if the bit 31 is 1
     }
     public byte dGetByte(int data){
-        return (byte)(data>>23);
+        return (byte)(data>>23);// it shift all bit to the left for 23 slots, and the (byte) cuts off the bit 8
     }
     public int dGetInt(int data){
-        return data&0x7fffff;
+        return data&0x7fffff;// it uses bit-and to clear the higher 9 bits
     }
 }
 
+// been used to compare Words when final sorting. could be implementd as compareTo() in Word
 class WordComparator implements Comparator<Word>{
     @Override    
     public int compare(Word a,Word b){
-        if(a.getPathLength()!=b.getPathLength()){
-            return b.getPathLength()-a.getPathLength();
-        }else{
-            return b.getWord().compareTo(a.getWord());
-        }
+        return b.getPathLength()-a.getPathLength();
     }
 }
  
 // all data structures were intended to be implemented in the "lowest level" to save memory
 public class BogglePlayer{
-    // this is the data, stores everything
-    // should not be modified after initialized
-    public int[][] d;
-    public Seeker[][] seekers;
-    public ArrayList<Word> answers;
+    public int[][] d;// the optimized data array for the dictionary tree
+    public Seeker[][] seekers;// the 4*4 threads for each box
+    public ArrayList<Word> answers;// the pool for answers collected in Seekers
 
     public BogglePlayer(String wordFile){
         // open the scanner
         Scanner scan;
-        try{
-            scan=new Scanner(new File(wordFile));
-        }
-        catch(FileNotFoundException e){
-            System.out.println(e);
-            return;
-        }
+        try{scan=new Scanner(new File(wordFile));}
+        catch(FileNotFoundException e){System.out.println(e);return;}
 
-        // build dictionary tree 
+        // build dictionary tree
+        // the three data structures represent the three fields in each virtual node
         ArrayList<Boolean> isAWord=new ArrayList<Boolean>();
         ArrayList<ArrayList<Integer>> child=new ArrayList<ArrayList<Integer>>();
         ArrayList<Byte> alphabet=new ArrayList<Byte>();
@@ -241,13 +256,13 @@ public class BogglePlayer{
                     if(child.get(p).get(str.charAt(i)-'A')==0){// if that child has not been added yet
                         newDictionaryNode(p,str.charAt(i),child,isAWord,alphabet);
                     }
-                    p=child.get(p).get(str.charAt(i)-'A');
+                    p=child.get(p).get(str.charAt(i)-'A');// move to the target node
 
                     if(str.charAt(i)=='Q'){// skip the Qu
                         i++;
                     }
                 }
-                isAWord.set(p,true);
+                isAWord.set(p,true);// set the node represent a word
             }
         }
         scan.close();
@@ -255,7 +270,7 @@ public class BogglePlayer{
         // fill in the data
         d=new int[isAWord.size()][];
         for(int i=0;i<isAWord.size();i++){
-            int childCount=0;
+            int childCount=0;// count valid childrens
             for(int j=0;j<child.get(i).size();j++){
                 if(child.get(i).get(j)!=0){
                     childCount++;
@@ -263,8 +278,8 @@ public class BogglePlayer{
             }
 
             if(childCount!=0){
-                d[i]=new int[childCount];
-                childCount=0;
+                d[i]=new int[childCount];// allocate exactly amount of memory
+                childCount=0;// reused
                 for(int j=0;j<child.get(i).size();j++){
                     if(child.get(i).get(j)!=0){
                         d[i][childCount]=dCompose(isAWord.get(child.get(i).get(j)),(byte)j,child.get(i).get(j));
@@ -274,7 +289,7 @@ public class BogglePlayer{
             }
         }
 
-        // prepare seekers!
+        // allocate Seekers before run to save time. this lowered the time from 0.0x to around 0.00x
         seekers=new Seeker[4][4];
         for(int i=0;i<4;i++){
             for(int j=0;j<4;j++){
@@ -311,11 +326,13 @@ public class BogglePlayer{
         }
     }
 
+    // bit 31: isAWord, 30-23: alphabet, 22-0: childPosition. 23 bits are far more than enough for the standatd dictionary
     public int dCompose(boolean isAWord,byte alphabet,int child){
         return ((isAWord?1:0)<<31)|(((int)alphabet)<<23)|(child);
     }
 
     public Word[] getWords(char[][] board){
+        // translate char[][] to byte[][]
         byte[][] byteBoard=new byte[4][4];
         for(int i=0;i<4;i++){
             for(int j=0;j<4;j++){
@@ -324,31 +341,44 @@ public class BogglePlayer{
             // System.err.printf("[%s]\n",Arrays.toString(board[i]));
         }
 
+        // each thread start with a box
+        // the strategy is to start Seekers, let them run while start more Seekers. then collect answers after finish.
+        // 4 Seekers at a time becuase the test server has 6 cores available. save 2 for the main thread and other process on the server
         for(int i=0;i<4;i++){
-            for(int j=0;j<4;j++){
+            for(int j=0;j<4;j++){// using 4 threads
+                // start all Seekers, let them run, and then collect answers
                 seekers[i][j].board=byteBoard;
                 seekers[i][j].start();
             }
             for(int j=0;j<4;j++){
-                try{seekers[i][j].join();}
+                try{seekers[i][j].join();}// wait Seekers to finish
                 catch(InterruptedException e){System.out.println(e);}
-                answers.addAll(seekers[i][j].answers);
+                answers.addAll(seekers[i][j].answers);// collect answers
             }
         }
 
         Word[] myWords=new Word[20];
-        Collections.sort(answers,new WordComparator());
+        Collections.sort(answers,new WordComparator());// all answers are sorted based on length. see WordComparator
         // System.out.printf("[answers=%s]\n",answers);
 
-        myWords[0]=answers.get(0);
-        int i,j;
-        for(i=1,j=0;i<answers.size()&&j<myWords.length-1;i++){
-            if(!answers.get(i).equals(myWords[j])){
-                myWords[++j]=answers.get(i);
+        if(!answers.isEmpty()){// in case when there is no answer. an extremely rare case that cause crashing
+            myWords[0]=answers.get(0);
+            for(int i=1,j=1;i<answers.size()&&j<myWords.length-1;i++){
+                if(!answers.get(i).equals(myWords[j-1])){// avoid duplicate answers
+                    myWords[j++]=answers.get(i);
+                }
             }
         }
 
         // System.err.printf("[myWords=%s]\n",Arrays.toString(myWords));
         return myWords;
+    }
+
+    // the main() is only for module testing
+    public static void main(String[] args){
+        char[][] board={{'A','A','A','A'},{'A','A','A','A'},{'A','A','A','A'},{'A','A','A','F'}};
+
+        BogglePlayer bp=new BogglePlayer(args[0]);
+        Word[] words=bp.getWords(board);
     }
 }
