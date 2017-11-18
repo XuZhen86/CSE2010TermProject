@@ -1,6 +1,9 @@
 #!/bin/bash
 
-for i in `seq 0 100000`; do
+# Usage: ./BatchRun.sh startSeed endSeek
+# Example: ./BatchRun.sh 1 10
+
+for i in `seq $1 $2`; do
     printf "%d," $i >> Stats.csv
-    java EvalBogglePlayer words.txt $i >> Stats.csv
+    java BatchEvalBogglePlayer words.txt $i >> Stats.csv
 done

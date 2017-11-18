@@ -111,7 +111,7 @@ class Word{
     // the folowing 2 functions are added.
     public boolean equals(Word w){return this.word.equals(w.getWord());}
     public String toString(){return String.format("[%s,%s]",word,path);}// for debugging
-}
+    }
 
 class Seeker extends Thread{
     public static final int[][] NEXT_STEP={
@@ -215,10 +215,14 @@ class Seeker extends Thread{
 class WordComparator implements Comparator<Word>{
     @Override    
     public int compare(Word a,Word b){
-        return b.getPathLength()-a.getPathLength();
+        if(a.getPathLength()!=b.getPathLength()){
+            return b.getPathLength()-a.getPathLength();
+        }else{
+            return b.getWord().compareTo(a.getWord());
+        }
     }
 }
- 
+
 // all data structures were intended to be implemented in the "lowest level" to save memory
 public class BogglePlayer{
     public int[][] d;// the optimized data array for the dictionary tree
@@ -231,7 +235,7 @@ public class BogglePlayer{
         try{scan=new Scanner(new File(wordFile));}
         catch(FileNotFoundException e){System.out.println(e);return;}
 
-        // build dictionary tree
+        // build dictionary tree 
         // the three data structures represent the three fields in each virtual node
         ArrayList<Boolean> isAWord=new ArrayList<Boolean>();
         ArrayList<ArrayList<Integer>> child=new ArrayList<ArrayList<Integer>>();
@@ -362,7 +366,7 @@ public class BogglePlayer{
         // System.out.printf("[answers=%s]\n",answers);
 
         if(!answers.isEmpty()){// in case when there is no answer. an extremely rare case that cause crashing
-            myWords[0]=answers.get(0);
+        myWords[0]=answers.get(0);
             for(int i=1,j=1;i<answers.size()&&j<myWords.length-1;i++){
                 if(!answers.get(i).equals(myWords[j-1])){// avoid duplicate answers
                     myWords[j++]=answers.get(i);
