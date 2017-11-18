@@ -1,7 +1,7 @@
 /*
     Authors (group members): Zhen Xu, Tariq Maashani, Jim Harrell
-    Email addresses of group members:
-Group name:
+    Email addresses of group members: zxu2016@my.fit.edu, talmaashani2016@my.fit.edu, jharrell2014@my.fit.edu
+    Group name: 2a
     Course: CSE 2010
     Section: 02
 
@@ -9,8 +9,6 @@ Group name:
         Algorithm: DFS
         Data structure: DictionaryTree
         Other techniques: Multithreading, Bit-Wise Operation, Process-Oriented Programming
-Description:
-      
 
     Average Performance on code01.fit.edu:
         Points: 236.5
@@ -111,7 +109,7 @@ class Word{
     // the folowing 2 functions are added.
     public boolean equals(Word w){return this.word.equals(w.getWord());}
     public String toString(){return String.format("[%s,%s]",word,path);}// for debugging
-    }
+}
 
 class Seeker extends Thread{
     public static final int[][] NEXT_STEP={
@@ -376,13 +374,5 @@ public class BogglePlayer{
 
         // System.err.printf("[myWords=%s]\n",Arrays.toString(myWords));
         return myWords;
-    }
-
-    // the main() is only for module testing
-    public static void main(String[] args){
-        char[][] board={{'A','A','A','A'},{'A','A','A','A'},{'A','A','A','A'},{'A','A','A','F'}};
-
-        BogglePlayer bp=new BogglePlayer(args[0]);
-        Word[] words=bp.getWords(board);
     }
 }
