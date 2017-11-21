@@ -30,7 +30,7 @@ class Location{
 }
 
 // copied, organized, and extended from Word.java
-class Word{
+class Word implements Comparable<Word>{
     private String word;
     private ArrayList<Location> path;
     public Word(){word = "";path = new ArrayList<Location>(8);  }
@@ -109,6 +109,13 @@ class Word{
     // the folowing 2 functions are added.
     public boolean equals(Word w){return this.word.equals(w.getWord());}
     public String toString(){return String.format("[%s,%s]",word,path);}// for debugging
+    public int compareTo(Word w){
+        if(getPathLength()!=w.getPathLength()){
+            return w.getPathLength()-getPathLength();
+        }else{
+            return w.getWord().compareTo(getWord());
+        }
+    }
 }
 
 class Seeker extends Thread{
@@ -120,7 +127,6 @@ class Seeker extends Thread{
 
     public int[][] d;
     public byte[][] board;
-    public int startX,startY;
 
     public boolean[][] visited;
     public byte[] traceByte,stringByte;// the traceByte is the original byte[] to store the trace of the dfs, the stringByte is for the special case of QU
@@ -130,20 +136,18 @@ class Seeker extends Thread{
     public Seeker(int[][] d,int startX,int startY){
         // System.out.printf("[Seeker(%d,%d)]\n",startX,startY);
         this.d=d;
-        this.startX=startX;
-        this.startY=startY;
-
         visited=new boolean[4][4];
         traceByte=new byte[20];
         stringByte=new byte[20];
         traceXY=new int[20][2];
+        traceXY[0][0]=startX;
+        traceXY[0][1]=startY;
         answers=new ArrayList<Word>();
     }
 
     public void run(){
-        traceXY[0][0]=startX;
-        traceXY[0][1]=startY;
-        dfs(0,startX,startY,0);
+        
+        dfs(0,traceXY[0][0],traceXY[0][1],0);
     }
 
     public void dfs(int p,int x,int y,int depth){
@@ -179,7 +183,6 @@ class Seeker extends Thread{
                 dfs(dGetInt(d[p][index]),newX,newY,depth+1);
             }
         }
-
         visited[x][y]=false;
     }
 
@@ -206,18 +209,6 @@ class Seeker extends Thread{
     }
     public int dGetInt(int data){
         return data&0x7fffff;// it uses bit-and to clear the higher 9 bits
-    }
-}
-
-// been used to compare Words when final sorting. could be implementd as compareTo() in Word
-class WordComparator implements Comparator<Word>{
-    @Override    
-    public int compare(Word a,Word b){
-        if(a.getPathLength()!=b.getPathLength()){
-            return b.getPathLength()-a.getPathLength();
-        }else{
-            return b.getWord().compareTo(a.getWord());
-        }
     }
 }
 
@@ -296,6 +287,7 @@ public class BogglePlayer{
         for(int i=0;i<4;i++){
             for(int j=0;j<4;j++){
                 seekers[i][j]=new Seeker(d,i,j);
+                seekers[i][j].setName(String.format("Seeker@%d,%d",i,j));
             }
         }
 
@@ -360,7 +352,7 @@ public class BogglePlayer{
         }
 
         Word[] myWords=new Word[20];
-        Collections.sort(answers,new WordComparator());// all answers are sorted based on length. see WordComparator
+        Collections.sort(answers);// all answers are sorted based on length. see WordComparator
         // System.out.printf("[answers=%s]\n",answers);
 
         if(!answers.isEmpty()){// in case when there is no answer. an extremely rare case that cause crashing
