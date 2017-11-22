@@ -9,12 +9,6 @@
         Algorithm: DFS
         Data structure: DictionaryTree
         Other techniques: Multithreading, Bit-Wise Operation, Process-Oriented Programming
-
-    Average Performance on code01.fit.edu:
-        Points: 236.5
-        Time in seconds: 0.00911
-        Used memory in bytes: 32806801
-        Overall Performance: 126.55
 */
 
 import java.util.*;
@@ -106,7 +100,7 @@ class Word implements Comparable<Word>{
         }
     }
 
-    // the folowing 2 functions are added.
+    // the folowing 3 functions are added.
     public boolean equals(Word w){return this.word.equals(w.getWord());}
     public String toString(){return String.format("[%s,%s]",word,path);}// for debugging
     public int compareTo(Word w){
@@ -146,7 +140,6 @@ class Seeker extends Thread{
     }
 
     public void run(){
-        
         dfs(0,traceXY[0][0],traceXY[0][1],0);
     }
 

@@ -54,7 +54,7 @@ public class BatchEvalBogglePlayer {
         //System.out.println("Pre-processing in seconds (not part of score): " + df.format(processingTimeInSec));
 System.out.print(processingTimeInSec+",");
         Runtime runtime = Runtime.getRuntime();
-        runtime.gc();
+        //runtime.gc();
         //System.out.println("Used memory after pre-processing in bytes (not part of score): " + (runtime.totalMemory() - runtime.freeMemory()));
 System.out.print((runtime.totalMemory() - runtime.freeMemory())+",");
 
@@ -89,7 +89,7 @@ System.out.print((runtime.totalMemory() - runtime.freeMemory())+",");
         //Play the game of Boggle and find the words
         Word[] words = player.getWords(board);
         long endTime = bean.getCurrentThreadCpuTime();
-
+        long memory = runtime.totalMemory() - runtime.freeMemory();
         double totalElapsedTime = endTime - startTime;
 
         //Convert elapsed time into seconds, and calculate the Average time
@@ -106,7 +106,6 @@ System.out.print((runtime.totalMemory() - runtime.freeMemory())+",");
         //System.out.printf("Points: %d\n", totalPoints);
 System.out.print(totalPoints+",");
 
-
         //To format the Average time upto 4 decimal places.
         //DecimalFormat df = new DecimalFormat("0.####E0"); // moved to near initialization
         //System.out.println("Time in seconds: " + df.format(totalElapsedTime));
@@ -115,9 +114,9 @@ System.out.print(totalElapsedTime+",");
         // Get the Java runtime
         // Runtime runtime = Runtime.getRuntime();  // moved to near initialization
         // Run the garbage collector
-        runtime.gc();
+        // runtime.gc();
         // Calculate the used memory
-        long memory = runtime.totalMemory() - runtime.freeMemory();
+        
         //System.out.println("Used memory in bytes: " + memory);
 System.out.print(memory+",");
         //OverAll Performance

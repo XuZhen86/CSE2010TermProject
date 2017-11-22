@@ -88,8 +88,9 @@ public class EvalBogglePlayer {
         // report time and memory spent on preprocessing
         DecimalFormat df = new DecimalFormat("0.####E0");
         System.out.println("Pre-processing in seconds (not part of score): " + df.format(processingTimeInSec));
+        // Get the Java runtime
+        // Runtime runtime = Runtime.getRuntime();  // moved to near initialization
         Runtime runtime = Runtime.getRuntime();
-        runtime.gc();
         System.out.println("Used memory after pre-processing in bytes (not part of score): " + (runtime.totalMemory() - runtime.freeMemory()));
 
         //Default seed if second argument is not passed
@@ -123,6 +124,8 @@ public class EvalBogglePlayer {
         //Play the game of Boggle and find the words
         Word[] words = player.getWords(board);
         long endTime = bean.getCurrentThreadCpuTime();
+        // Calculate the used memory
+        long memory = runtime.totalMemory() - runtime.freeMemory();
 
         double totalElapsedTime = endTime - startTime;
 
@@ -139,17 +142,10 @@ public class EvalBogglePlayer {
         int totalPoints = calculatePoints(words, board);
         System.out.printf("Points: %d\n", totalPoints);
 
-
         //To format the Average time upto 4 decimal places.
         //DecimalFormat df = new DecimalFormat("0.####E0"); // moved to near initialization
         System.out.println("Time in seconds: " + df.format(totalElapsedTime));
 
-        // Get the Java runtime
-        // Runtime runtime = Runtime.getRuntime();  // moved to near initialization
-        // Run the garbage collector
-        runtime.gc();
-        // Calculate the used memory
-        long memory = runtime.totalMemory() - runtime.freeMemory();
         System.out.println("Used memory in bytes: " + memory);
         //OverAll Performance
         System.out.printf("Overall Performance: %.4f\n", (totalPoints * totalPoints) / Math.sqrt(totalElapsedTime * memory));
@@ -192,9 +188,7 @@ public class EvalBogglePlayer {
                     points += checkForWordValidity(w, board);
                 }
             }
-            // System.out.printf("[points=%d]\n",points);
         }
-        
         return points;
     }
 
@@ -219,7 +213,6 @@ public class EvalBogglePlayer {
             }
         }
 
-
         //Check each letter on the board is used at most once and if letter are are the board or not
         boolean[][] used = new boolean[4][4];
         for (int i = 0, letterIndex = 0; i < word.getPathLength(); i++, letterIndex++) {
@@ -239,7 +232,6 @@ public class EvalBogglePlayer {
         if (!dictionary.contains(word.getWord().toUpperCase())) {
             return -((length - 2) * (length - 2));
         }
-
 
         return (length - 2) * (length - 2);
     }
