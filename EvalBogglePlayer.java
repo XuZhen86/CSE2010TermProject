@@ -91,6 +91,7 @@ public class EvalBogglePlayer {
         // Get the Java runtime
         // Runtime runtime = Runtime.getRuntime();  // moved to near initialization
         Runtime runtime = Runtime.getRuntime();
+	runtime.gc();
         System.out.println("Used memory after pre-processing in bytes (not part of score): " + (runtime.totalMemory() - runtime.freeMemory()));
 
         //Default seed if second argument is not passed

@@ -54,7 +54,7 @@ public class BatchEvalBogglePlayer {
         //System.out.println("Pre-processing in seconds (not part of score): " + df.format(processingTimeInSec));
 System.out.print(processingTimeInSec+",");
         Runtime runtime = Runtime.getRuntime();
-        //runtime.gc();
+        runtime.gc();
         //System.out.println("Used memory after pre-processing in bytes (not part of score): " + (runtime.totalMemory() - runtime.freeMemory()));
 System.out.print((runtime.totalMemory() - runtime.freeMemory())+",");
 
