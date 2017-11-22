@@ -140,6 +140,7 @@ class Seeker extends Thread{
     }
 
     public void run(){
+        // System.out.printf("[@1 %d]\n",Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
         dfs(0,traceXY[0][0],traceXY[0][1],0);
     }
 
@@ -157,6 +158,8 @@ class Seeker extends Thread{
                 traceXY[depth+1][1]=newY;
 
                 if(dGetBoolean(d[p][index])){
+                    dDisable(p,index);
+
                     int j,k;
                     for(j=0,k=0;j<=depth;j++){
                         stringByte[k++]=traceByte[j];
@@ -166,7 +169,7 @@ class Seeker extends Thread{
                     }
 
                     Word aWord=new Word();
-                    aWord.setWord(new String(stringByte,0,k));// FIX QU
+                    aWord.setWord(new String(stringByte,0,k));
                     for(j=1;j<=depth+1;j++){
                         aWord.addLetterRowAndCol(traceXY[j][0],traceXY[j][1]);
                     }
@@ -191,6 +194,12 @@ class Seeker extends Thread{
             }
         }
         return -1;
+    }
+
+    // this function is called to disable a word in dictionary as we only need the word once
+    // it takes longer if this function is synchronized and it does not hurt to have sevral duplicated word compared to a dozen
+    public void dDisable(int p,int index){
+        d[p][index]&=0x7fffffff;// set the bit 31 to 0
     }
 
     // the folowing three functions are used to extract fields from entry of d[][]. all using bitwise operation
@@ -275,7 +284,7 @@ public class BogglePlayer{
             }
         }
 
-        // allocate Seekers before run to save time. this lowered the time from 0.0x to around 0.00x
+        // allocate Seekers before run to save time.
         seekers=new Seeker[4][4];
         for(int i=0;i<4;i++){
             for(int j=0;j<4;j++){
