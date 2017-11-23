@@ -112,7 +112,7 @@ class Word implements Comparable<Word>{
     }
 }
 
-class Seeker extends Thread{
+class Seeker{
     public static final int[][] NEXT_STEP={
         {-1,-1},{-1, 0},{-1, 1},
         { 0,-1},        { 0, 1},
@@ -127,24 +127,27 @@ class Seeker extends Thread{
     public int[][] traceXY;
     public ArrayList<Word> answers;
 
-    public Seeker(int[][] d,int startX,int startY){
+    public Seeker(int[][] d){
         // System.out.printf("[Seeker(%d,%d)]\n",startX,startY);
         this.d=d;
         visited=new boolean[4][4];
         traceByte=new byte[20];
         stringByte=new byte[20];
         traceXY=new int[20][2];
-        traceXY[0][0]=startX;
-        traceXY[0][1]=startY;
         answers=new ArrayList<Word>();
     }
 
-    public void run(){
-        // System.out.printf("[@1 %d]\n",Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
-        dfs(0,traceXY[0][0],traceXY[0][1],0);
+    public void start(){
+        for(int i=0;i<4;i++){
+            for(int j=0;j<4;j++){
+                traceXY[0][0]=i;
+                traceXY[0][1]=j;
+                dfs(0,i,j,0);
+            }
+        }
     }
 
-    public void dfs(int p,int x,int y,int depth){
+    public void dfs(int p,int x,int y,int depth){// dfs(0,traceXY[0][0],traceXY[0][1],0);
         // System.out.printf("[dfs(%d,%d,%d,%d)]\n",p,x,y,depth);
         visited[x][y]=true;
         for(int i=0;i<NEXT_STEP.length;i++){
@@ -156,6 +159,8 @@ class Seeker extends Thread{
                 traceByte[depth]=(byte)(dGetByte(d[p][index])+'A');
                 traceXY[depth+1][0]=newX;
                 traceXY[depth+1][1]=newY;
+                
+                dfs(dGetInt(d[p][index]),newX,newY,depth+1);
 
                 if(dGetBoolean(d[p][index])){
                     dDisable(p,index);
@@ -175,8 +180,6 @@ class Seeker extends Thread{
                     }
                     answers.add(aWord);
                 }
-
-                dfs(dGetInt(d[p][index]),newX,newY,depth+1);
             }
         }
         visited[x][y]=false;
@@ -185,6 +188,7 @@ class Seeker extends Thread{
     // it finds if there is a child in dictionary tree for the next char on the board
     // it also check if the xy is valid and never been visited
     public int findIndex(int p,int x,int y){
+        // System.out.printf("[p=%d,x=%d,y=%d,d[p].length=%d]\n",p,x,y,d[p].length);
         if(d[p]!=null&&0<=x&&x<4&&0<=y&&y<4&&!visited[x][y]){
             for(int i=0;i<d[p].length;i++){
                 // System.out.printf("[findIndex(%d,%d,%d) board[%d][%d]=%s dGetByte(d[%d][%d])=%s]\n",p,x,y,x,y,board[x][y],p,i,dGetByte(d[p][i]));
@@ -197,7 +201,6 @@ class Seeker extends Thread{
     }
 
     // this function is called to disable a word in dictionary as we only need the word once
-    // it takes longer if this function is synchronized and it does not hurt to have sevral duplicated word compared to a dozen
     public void dDisable(int p,int index){
         d[p][index]&=0x7fffffff;// set the bit 31 to 0
     }
@@ -216,9 +219,7 @@ class Seeker extends Thread{
 
 // all data structures were intended to be implemented in the "lowest level" to save memory
 public class BogglePlayer{
-    public int[][] d;// the optimized data array for the dictionary tree
-    public Seeker[][] seekers;// the 4*4 threads for each box
-    public ArrayList<Word> answers;// the pool for answers collected in Seekers
+    public Seeker seeker;
 
     public BogglePlayer(String wordFile){
         // open the scanner
@@ -263,7 +264,7 @@ public class BogglePlayer{
         scan.close();
 
         // fill in the data
-        d=new int[isAWord.size()][];
+        int[][] d=new int[isAWord.size()][];// the optimized data array for the dictionary tree
         for(int i=0;i<isAWord.size();i++){
             int childCount=0;// count valid childrens
             for(int j=0;j<child.get(i).size();j++){
@@ -284,16 +285,9 @@ public class BogglePlayer{
             }
         }
 
-        // allocate Seekers before run to save time.
-        seekers=new Seeker[4][4];
-        for(int i=0;i<4;i++){
-            for(int j=0;j<4;j++){
-                seekers[i][j]=new Seeker(d,i,j);
-                seekers[i][j].setName(String.format("Seeker@%d,%d",i,j));
-            }
-        }
-
-        answers=new ArrayList<Word>();
+        // allocate Seeker before run to save time.
+        seeker=new Seeker(d);
+        seeker.board=new byte[4][4];
     }
 
     public void newDictionaryNode(int p,char c,ArrayList<ArrayList<Integer>> child,ArrayList<Boolean> isAWord,ArrayList<Byte> alphabet){
@@ -329,36 +323,21 @@ public class BogglePlayer{
 
     public Word[] getWords(char[][] board){
         // translate char[][] to byte[][]
-        byte[][] byteBoard=new byte[4][4];
         for(int i=0;i<4;i++){
             for(int j=0;j<4;j++){
-                byteBoard[i][j]=(byte)board[i][j];
+                seeker.board[i][j]=(byte)board[i][j];
             }
             // System.err.printf("[%s]\n",Arrays.toString(board[i]));
         }
-
-        // each thread start with a box
-        // the strategy is to start Seekers, let them run while start more Seekers. then collect answers after finish.
-        // 4 Seekers at a time becuase the test server has 6 cores available. save 2 for the main thread and other process on the server
-        for(int i=0;i<4;i++){
-            for(int j=0;j<4;j++){// using 4 threads
-                // start all Seekers, let them run, and then collect answers
-                seekers[i][j].board=byteBoard;
-                seekers[i][j].start();
-            }
-            for(int j=0;j<4;j++){
-                try{seekers[i][j].join();}// wait Seekers to finish
-                catch(InterruptedException e){System.out.println(e);}
-                answers.addAll(seekers[i][j].answers);// collect answers
-            }
-        }
-
-        d=null;// maybe the system does GC without calling?
-        seekers=null;
+        
+        seeker.start();
 
         Word[] myWords=new Word[20];
-        Collections.sort(answers);// all answers are sorted based on length. see WordComparator
+        ArrayList<Word> answers=seeker.answers;
+        seeker=null;
         // System.out.printf("[answers=%s]\n",answers);
+        Collections.sort(answers);// all answers are sorted based on length.
+        
 
         if(!answers.isEmpty()){// in case when there is no answer. an extremely rare case that cause crashing
         myWords[0]=answers.get(0);

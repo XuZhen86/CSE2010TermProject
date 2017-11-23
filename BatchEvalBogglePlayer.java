@@ -8,6 +8,42 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
+/*
+
+  Author: Taher Patanwala
+  Email: tpatanwala2016@my.fit.edu
+  Pseudocode: Philip Chan
+
+  Usage: EvalBogglePlayer wordFile [seed]
+
+  Input:
+  wordFile has valid words, one on each line
+  seed is for generating different boards [optional]
+
+  Description:
+
+  The goal is to evaluate BogglePlayer
+  Validity and points for words are in the assignment.
+
+  The performance of BogglePlayer is measured by:
+
+  a.  totalPoints: total points of found words
+  b.  speed: time in second for finding words
+  c.  space consumption: memory consumption
+  d.  overall score--(totalPoints^2)/sqrt(time * memory)  
+
+
+  --------Pseudocode for evaluating BogglePlayer---------------
+
+     BogglePlayer player = new BogglePlayer(wordFile) // a list of English words
+
+     board = randomly generate a board
+     wordList = player.getWords(board)
+     check validity of wordList according to the four rules in the assignment
+     calculate points as in the assignment
+
+     report performance
+ */
 
 public class BatchEvalBogglePlayer {
     private static ArrayList<String> dictionary = new ArrayList<>();
@@ -51,19 +87,18 @@ public class BatchEvalBogglePlayer {
 
         // report time and memory spent on preprocessing
         DecimalFormat df = new DecimalFormat("0.####E0");
-        //System.out.println("Pre-processing in seconds (not part of score): " + df.format(processingTimeInSec));
-System.out.print(processingTimeInSec+",");
+        System.out.print(processingTimeInSec+",");
+        // Get the Java runtime
+        // Runtime runtime = Runtime.getRuntime();  // moved to near initialization
         Runtime runtime = Runtime.getRuntime();
-        runtime.gc();
-        //System.out.println("Used memory after pre-processing in bytes (not part of score): " + (runtime.totalMemory() - runtime.freeMemory()));
-System.out.print((runtime.totalMemory() - runtime.freeMemory())+",");
+    runtime.gc();
+        System.out.print((runtime.totalMemory() - runtime.freeMemory())+",");
 
         //Default seed if second argument is not passed
         long seed = 123456789;
         if (args.length == 2) {
             seed = Long.parseLong(args[1]);
         }
-        //System.out.println("Playing Boggle...");
 
 
         Random rnd = new Random(seed);
@@ -89,7 +124,9 @@ System.out.print((runtime.totalMemory() - runtime.freeMemory())+",");
         //Play the game of Boggle and find the words
         Word[] words = player.getWords(board);
         long endTime = bean.getCurrentThreadCpuTime();
+        // Calculate the used memory
         long memory = runtime.totalMemory() - runtime.freeMemory();
+        
         double totalElapsedTime = endTime - startTime;
 
         //Convert elapsed time into seconds, and calculate the Average time
@@ -103,29 +140,26 @@ System.out.print((runtime.totalMemory() - runtime.freeMemory())+",");
 
         //Calculate points for the words found
         int totalPoints = calculatePoints(words, board);
-        //System.out.printf("Points: %d\n", totalPoints);
-System.out.print(totalPoints+",");
+        System.out.print(totalPoints+",");
 
         //To format the Average time upto 4 decimal places.
         //DecimalFormat df = new DecimalFormat("0.####E0"); // moved to near initialization
-        //System.out.println("Time in seconds: " + df.format(totalElapsedTime));
-System.out.print(totalElapsedTime+",");
-
-        // Get the Java runtime
-        // Runtime runtime = Runtime.getRuntime();  // moved to near initialization
-        // Run the garbage collector
-        // runtime.gc();
-        // Calculate the used memory
+        System.out.print(totalElapsedTime+",");
         
-        //System.out.println("Used memory in bytes: " + memory);
-System.out.print(memory+",");
+        System.out.print(memory+",");
         //OverAll Performance
-        //System.out.printf("Overall Performance: %.4f\n", (totalPoints * totalPoints) / Math.sqrt(totalElapsedTime * memory));
-System.out.println((totalPoints * totalPoints) / Math.sqrt(totalElapsedTime * memory));
+        System.out.println((totalPoints * totalPoints) / Math.sqrt(totalElapsedTime * memory));
 
         BogglePlayer player2 = player;  // keep player used to avoid garbage collection of player
     }
 
+    /**
+     * Calculates the points for the words found on the board
+     *
+     * @param words The list of words whose points are to be calculated
+     * @param board The board on which the words were found
+     * @return Returns the number of points
+     */
     private static int calculatePoints(Word[] words, char[][] board) {
         int points = 0;
         //Penalty if more than 20 words were returned
@@ -158,6 +192,13 @@ System.out.println((totalPoints * totalPoints) / Math.sqrt(totalElapsedTime * me
         return points;
     }
 
+    /**
+     * Checks if the word is valid and assigns positive points for valid word and negative points for invalid word
+     *
+     * @param word  The word that is to be evaluated
+     * @param board The board on which the word was found
+     * @return Positive or negative points for the word
+     */
     private static int checkForWordValidity(Word word, char[][] board) {
         int length = word.getWord().length();
 
@@ -171,7 +212,6 @@ System.out.println((totalPoints * totalPoints) / Math.sqrt(totalElapsedTime * me
                 return -((length - 2) * (length - 2));
             }
         }
-
 
         //Check each letter on the board is used at most once and if letter are are the board or not
         boolean[][] used = new boolean[4][4];
@@ -193,10 +233,16 @@ System.out.println((totalPoints * totalPoints) / Math.sqrt(totalElapsedTime * me
             return -((length - 2) * (length - 2));
         }
 
-
         return (length - 2) * (length - 2);
     }
 
+    /**
+     * Calculates the square distance between the two location objects
+     *
+     * @param l1 The first Location
+     * @param l2 The second Location
+     * @return Returns the distance square the two locations
+     */
     private static int squareDistance(Location l1, Location l2) {
         return (l1.row - l2.row) * (l1.row - l2.row) + (l1.col - l2.col) * (l1.col - l2.col);
     }
