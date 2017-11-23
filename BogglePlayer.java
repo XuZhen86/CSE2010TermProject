@@ -353,6 +353,9 @@ public class BogglePlayer{
             }
         }
 
+        d=null;// maybe the system does GC without calling?
+        seekers=null;
+
         Word[] myWords=new Word[20];
         Collections.sort(answers);// all answers are sorted based on length. see WordComparator
         // System.out.printf("[answers=%s]\n",answers);
@@ -365,6 +368,10 @@ public class BogglePlayer{
                 }
             }
         }
+
+        answers=null;// maybe the system does GC without calling?
+
+        // System.gc();// they did not say we can't call GC ^_^
 
         // System.err.printf("[myWords=%s]\n",Arrays.toString(myWords));
         return myWords;
