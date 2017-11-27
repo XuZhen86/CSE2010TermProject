@@ -117,7 +117,7 @@ public class BogglePlayer{// all data structures were intended to be implemented
         { 1,-1},{ 1, 0},{ 1, 1}
     };
 
-    public static int[][] d;
+    public static int[] d;// the ultimate 1d data array to store the dictionary tree
     public static byte[][] board;
     public static boolean[][] visited;
     public static byte[] traceByte,stringByte;// the traceByte is the original byte[] to store the trace of the dfs, the stringByte is for the special case of QU
@@ -166,27 +166,37 @@ public class BogglePlayer{// all data structures were intended to be implemented
         }
         scan.close();
 
-        // fill in the data
-        d=new int[isAWord.size()][];// the optimized data array for the dictionary tree
-        for(int i=0;i<isAWord.size();i++){
+        int[] posMap=new int[isAWord.size()];// map the raw node number to position in d[]
+        posMap[0]=0;
+        for(int i=1;i<posMap.length;i++){
             int childCount=0;// count valid childrens
-            for(int j=0;j<child.get(i).size();j++){
-                if(child.get(i).get(j)!=0){
+            for(int j=0;j<child.get(i-1).size();j++){
+                if(child.get(i-1).get(j)!=0){
                     childCount++;
                 }
             }
+            posMap[i]=1+posMap[i-1]+childCount;
+        }
+
+        // fill in the data
+        d=new int[posMap[isAWord.size()-1]+26];// the optimized data array for the dictionary tree
+        for(int i=0;i<isAWord.size();i++){
+            int childCount=(i==isAWord.size()-1?posMap[i]+1:posMap[i+1])-posMap[i]-1;// count valid childrens
+
+            d[posMap[i]]=childCount;
 
             if(childCount!=0){
-                d[i]=new int[childCount];// allocate exactly amount of memory
                 childCount=0;// reused
                 for(int j=0;j<child.get(i).size();j++){
                     if(child.get(i).get(j)!=0){
-                        d[i][childCount]=dCompose(isAWord.get(child.get(i).get(j)),(byte)j,child.get(i).get(j));
-                        childCount++;
+                        d[posMap[i]+(++childCount)]=dCompose(isAWord.get(child.get(i).get(j)),(byte)j,posMap[child.get(i).get(j)]);
                     }
                 }
             }
         }
+
+        // for(int i=0;i<posMap.length;i++){System.out.printf("posMap[%d]=%d\n",i,posMap[i]);}
+        // for(int i=0;i<d.length;i++){System.out.printf("d[%d]=%d {%c,%s,%d}\n",i,d[i],dGetByte(d[i])+'A',dGetBoolean(d[i]),dGetInt(d[i]));}
 
         board=new byte[4][4];
         visited=new boolean[4][4];
@@ -226,7 +236,7 @@ public class BogglePlayer{// all data structures were intended to be implemented
     // bit 31: isAWord, 30-23: alphabet, 22-0: childPosition. 23 bits are more than enough for the standatd dictionary
     public int dCompose(boolean isAWord,byte alphabet,int child){return ((isAWord?1:0)<<31)|(((int)alphabet)<<23)|(child);}
     // this function is called to disable a word in dictionary as we only need the word once
-    public void dDisable(int p,int index){d[p][index]&=0x7fffffff;}// set the bit 31 to 0
+    public void dDisable(int p,int index){d[p+index]&=0x7fffffff;}// set the bit 31 to 0
 
     // the folowing three functions are used to extract fields from entry of d[][]. all using bitwise operation
     public boolean dGetBoolean(int data){return data<0;}// it's actually testing if the bit 31 is 1
@@ -269,15 +279,15 @@ public class BogglePlayer{// all data structures were intended to be implemented
             int newX=x+NEXT_STEP[i][0],newY=y+NEXT_STEP[i][1];
             int index=findIndex(p,newX,newY);
             // System.out.printf("[dfs(%d,%d,%d,%d) newX=%d newY=%d index=%d]\n",p,x,y,depth,newX,newY,index);
-
-            if(index!=-1){
-                traceByte[depth]=(byte)(dGetByte(d[p][index])+'A');
+    
+            if(index!=0){
+                traceByte[depth]=(byte)(dGetByte(d[p+index])+'A');
                 traceXY[depth+1][0]=newX;
                 traceXY[depth+1][1]=newY;
-                
-                dfs(dGetInt(d[p][index]),newX,newY,depth+1);
 
-                if(dGetBoolean(d[p][index])){
+                dfs(dGetInt(d[p+index]),newX,newY,depth+1);
+                
+                if(dGetBoolean(d[p+index])){
                     dDisable(p,index);
 
                     int j,k;
@@ -302,14 +312,14 @@ public class BogglePlayer{// all data structures were intended to be implemented
 
     public int findIndex(int p,int x,int y){
         // System.out.printf("[p=%d,x=%d,y=%d,d[p].length=%d]\n",p,x,y,d[p].length);
-        if(d[p]!=null&&0<=x&&x<4&&0<=y&&y<4&&!visited[x][y]){
-            for(int i=0;i<d[p].length;i++){
+        if(d[p]!=0&&0<=x&&x<4&&0<=y&&y<4&&!visited[x][y]){
+            for(int i=1;i<=d[p];i++){
                 // System.out.printf("[findIndex(%d,%d,%d) board[%d][%d]=%s dGetByte(d[%d][%d])=%s]\n",p,x,y,x,y,board[x][y],p,i,dGetByte(d[p][i]));
-                if(board[x][y]==dGetByte(d[p][i])+'A'){
+                if(board[x][y]==dGetByte(d[p+i])+'A'){
                     return i;
                 }
             }
         }
-        return -1;
+        return 0;
     }
 }
