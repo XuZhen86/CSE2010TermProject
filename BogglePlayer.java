@@ -254,7 +254,7 @@ public class BogglePlayer{// all data structures were intended to be implemented
         // System.out.printf("[answers=%s]\n",answers);
         Collections.sort(answers);// all answers are sorted based on length.
         
-        for(int i=0;i<myWords.length;i++){
+        for(int i=0;i<myWords.length&&i<answers.size();i++){
             myWords[i]=answers.get(i);
         }
 
