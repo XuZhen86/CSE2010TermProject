@@ -254,13 +254,8 @@ public class BogglePlayer{// all data structures were intended to be implemented
         // System.out.printf("[answers=%s]\n",answers);
         Collections.sort(answers);// all answers are sorted based on length.
         
-        if(!answers.isEmpty()){// in case when there is no answer. an extremely rare case that cause crashing
-            myWords[0]=answers.get(0);
-            for(int i=1,j=1;i<answers.size()&&j<myWords.length-1;i++){
-                if(!answers.get(i).equals(myWords[j-1])){// avoid duplicate answers
-                    myWords[j++]=answers.get(i);
-                }
-            }
+        for(int i=0;i<myWords.length;i++){
+            myWords[i]=answers.get(i);
         }
 
         // System.out.printf("[myWords=%s]\n",Arrays.toString(myWords));
