@@ -91,7 +91,7 @@ public class EvalBogglePlayer {
         // Get the Java runtime
         // Runtime runtime = Runtime.getRuntime();  // moved to near initialization
         Runtime runtime = Runtime.getRuntime();
-	runtime.gc();
+        runtime.gc();
         System.out.println("Used memory after pre-processing in bytes (not part of score): " + (runtime.totalMemory() - runtime.freeMemory()));
 
         //Default seed if second argument is not passed
@@ -132,11 +132,11 @@ public class EvalBogglePlayer {
 
         //Convert elapsed time into seconds, and calculate the Average time
         totalElapsedTime = totalElapsedTime / 1.0E9;
-	if (totalElapsedTime > 180)  // longer than 3 minutes
-	    {
-		System.err.println("player.getWords() exceeded 3 minutes");
-		System.exit(-1);
-	    }
+        if (totalElapsedTime > 180)  // longer than 3 minutes
+        {
+            System.err.println("player.getWords() exceeded 3 minutes");
+            System.exit(-1);
+        }
 
 
         //Calculate points for the words found
@@ -203,6 +203,17 @@ public class EvalBogglePlayer {
     private static int checkForWordValidity(Word word, char[][] board) {
         int length = word.getWord().length();
 
+        //Check if path length is same as word length
+        int numberOfQs = 0;
+        for (int i = 0; i < word.getWord().length(); i++) {
+            if(word.getWord().charAt(i) == 'Q'){
+                numberOfQs++;
+            }
+        }
+        if(length != word.getPathLength() + numberOfQs){
+            return -((length - 2) * (length - 2));
+        }
+
         //Check if word has atleast 3 letters
         if (length < 3)
             return -1;
@@ -225,7 +236,7 @@ public class EvalBogglePlayer {
                 return -((length - 2) * (length - 2));
             else
                 used[row][col] = true;
-            if(word.getWord().charAt(letterIndex) == 'Q')
+            if (word.getWord().charAt(letterIndex) == 'Q')
                 letterIndex++;
         }
 

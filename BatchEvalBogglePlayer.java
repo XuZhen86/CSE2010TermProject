@@ -99,6 +99,7 @@ public class BatchEvalBogglePlayer {
         if (args.length == 2) {
             seed = Long.parseLong(args[1]);
         }
+        // System.out.println("Playing Boggle...");
 
 
         Random rnd = new Random(seed);
@@ -201,6 +202,17 @@ public class BatchEvalBogglePlayer {
      */
     private static int checkForWordValidity(Word word, char[][] board) {
         int length = word.getWord().length();
+        
+        //Check if path length is same as word length
+        int numberOfQs = 0;
+        for (int i = 0; i < word.getWord().length(); i++) {
+            if(word.getWord().charAt(i) == 'Q'){
+                numberOfQs++;
+            }
+        }
+        if(length != word.getPathLength() + numberOfQs){
+            return -((length - 2) * (length - 2));
+        }
 
         //Check if word has atleast 3 letters
         if (length < 3)
@@ -224,7 +236,7 @@ public class BatchEvalBogglePlayer {
                 return -((length - 2) * (length - 2));
             else
                 used[row][col] = true;
-            if(word.getWord().charAt(letterIndex) == 'Q')
+            if (word.getWord().charAt(letterIndex) == 'Q')
                 letterIndex++;
         }
 
