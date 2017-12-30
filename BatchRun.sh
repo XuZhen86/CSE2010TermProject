@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: ./BatchRun.sh startSeed endSeek
+# Usage: ./BatchRun.sh startSeed endSeed
 # Example: ./BatchRun.sh 1 10
 
 sleep 10
